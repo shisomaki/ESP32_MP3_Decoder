@@ -56,11 +56,11 @@ uint8_t _displaymode;
 void pulseEnable(void)
 {
     gpio_set_level(EN, 0);
-    vTaskDelay(1/ portTICK_RATE_MS);
+    vTaskDelay(1/ portTICK_PERIOD_MS);
     gpio_set_level(EN, 1);
-    vTaskDelay(1/ portTICK_RATE_MS);
+    vTaskDelay(1/ portTICK_PERIOD_MS);
     gpio_set_level(EN, 0);
-    vTaskDelay(1/ portTICK_RATE_MS);
+    vTaskDelay(1/ portTICK_PERIOD_MS);
 }
 
 void write4bits(uint8_t value)
@@ -115,7 +115,7 @@ void lcd_write(uint8_t value)
 void LiquidCrystal_Clear(void)
 {
     lcd_command(LCD_CLEARDISPLAY);
-    vTaskDelay(2/ portTICK_RATE_MS);
+    vTaskDelay(2/ portTICK_PERIOD_MS);
 }
 
 void LiquidCrystal_init(void)
@@ -139,33 +139,33 @@ void LiquidCrystal_init(void)
     gpio_set_level(EN, 0);
 
     // Power on wait
-    vTaskDelay(50/ portTICK_RATE_MS);
+    vTaskDelay(50/ portTICK_PERIOD_MS);
 
     write4bits(0x03);
-    vTaskDelay(5/ portTICK_RATE_MS);
+    vTaskDelay(5/ portTICK_PERIOD_MS);
 
     write4bits(0x03);
-    vTaskDelay(5/ portTICK_RATE_MS);
+    vTaskDelay(5/ portTICK_PERIOD_MS);
 
     write4bits(0x03);
-    vTaskDelay(1/ portTICK_RATE_MS);
+    vTaskDelay(1/ portTICK_PERIOD_MS);
 
     write4bits(0x02);  // 4bit mode
-    vTaskDelay(5/ portTICK_RATE_MS);
+    vTaskDelay(5/ portTICK_PERIOD_MS);
 
     _displayfunction = LCD_2LINE;
     lcd_command(LCD_FUNCTIONSET | _displayfunction);
-    vTaskDelay(5/ portTICK_RATE_MS);
+    vTaskDelay(5/ portTICK_PERIOD_MS);
 
     _displaycontrol = LCD_DISPLAYON;
     lcd_command(LCD_DISPLAYCONTROL | _displaycontrol);
-    vTaskDelay(5/ portTICK_RATE_MS);
+    vTaskDelay(5/ portTICK_PERIOD_MS);
 
     LiquidCrystal_Clear();
 
     _displaymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
     lcd_command(LCD_ENTRYMODESET | _displaymode);
-    vTaskDelay(20/ portTICK_RATE_MS);
+    vTaskDelay(20/ portTICK_PERIOD_MS);
 }
 
 void LCD_Addr (uint8_t value)
