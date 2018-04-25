@@ -56,7 +56,18 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
         freeaddrinfo(res);
     }
     ESP_LOGI(TAG, "... allocated socket");
-
+    
+    // receiving timeout
+    struct timeval receiving_timeout;
+    receiving_timeout.tv_sec = 0;
+    receiving_timeout.tv_usec = 500;
+    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &receiving_timeout,
+            sizeof(receiving_timeout)) < 0) {
+        ESP_LOGE(TAG, "... failed to set socket receiving timeout");
+        close(sock);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        return err;
+    }
 
     // connect, retrying a few times
     char retries = 0;
