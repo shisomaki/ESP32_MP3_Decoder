@@ -172,6 +172,7 @@ void web_radio_gpio_handler_task(void *pvParams)
                 vTaskDelay(20 / portTICK_PERIOD_MS);
             }
 
+            http_client_stop();
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
             web_radio_start(config);
