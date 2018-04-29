@@ -51,7 +51,7 @@ void controls_init(TaskFunction_t gpio_handler_task, const uint16_t usStackDepth
     gpio_config(&io_conf);
 
     //create a queue to handle gpio event from isr
-    gpio_evt_queue = xQueueCreate(2, sizeof(uint32_t));
+    gpio_evt_queue = xQueueCreate(1, sizeof(uint32_t));
     gpio_handler_param_t *params = calloc(1, sizeof(gpio_handler_param_t));
     params->gpio_evt_queue = gpio_evt_queue;
     params->user_data = user_data;
