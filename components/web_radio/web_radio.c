@@ -97,6 +97,7 @@ static int on_message_complete_cb(http_parser *parser)
 static void http_get_task(void *pvParameters)
 {
     web_radio_t *radio_conf = pvParameters;
+    radio_conf->status = 1;
 
     /* configure callbacks */
     http_parser_settings callbacks = { 0 };
@@ -118,6 +119,7 @@ static void http_get_task(void *pvParameters)
     }
     // ESP_LOGI(TAG, "http_client_get stack: %d\n", uxTaskGetStackHighWaterMark(NULL));
 
+    radio_conf->status = 0;
     vTaskDelete(NULL);
 }
 
@@ -144,7 +146,7 @@ void web_radio_gpio_handler_task(void *pvParams)
 
     uint32_t io_num;
     for (;;) {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+        if (xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS)) {
             ESP_LOGI(TAG, "GPIO[%d] intr, val: %d", io_num, gpio_get_level(io_num));
 
             /*
@@ -174,9 +176,15 @@ void web_radio_gpio_handler_task(void *pvParams)
 
             http_client_stop();
             vTaskDelay(1000 / portTICK_PERIOD_MS);
-            xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
+            xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS);
             web_radio_start(config);
+            
+            while(!config->status)
+                vTaskDelay(20 / portTICK_PERIOD_MS);
         }
+
+        if (!config->status)
+            web_radio_start(config);
     }
 }
 
