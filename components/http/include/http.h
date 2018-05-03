@@ -15,7 +15,6 @@
   */
 typedef esp_err_t (*stream_reader_cb)(char *recv_buf, ssize_t bytes_read, void *user_data);
 
-void http_client_stop (void);
 int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data);
 
 

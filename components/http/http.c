@@ -21,12 +21,6 @@
 
 #define TAG "http_client"
 
-static bool stop;
-
-void http_client_stop (void)
-{
-    stop = true;
-}
 
 /**
  * @brief simple http_get
@@ -123,7 +117,6 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
     parser.data = user_data;
 
     esp_err_t nparsed = 0;
-    stop = false;
     do {
         recved = read(sock, recv_buf, sizeof(recv_buf)-1);
 
@@ -132,7 +125,7 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
 
         // invoke on_body cb directly
         // nparsed = callbacks->on_body(&parser, recv_buf, recved);
-    } while(recved > 0 && nparsed >= 0 && stop == false);
+    } while(recved > 0 && nparsed >= 0);
 
     free(url);
 
