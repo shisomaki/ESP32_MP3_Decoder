@@ -123,7 +123,7 @@ void spiRamFifoWrite(const char *buff, int buffLen) {
 			// Drat, not enough free room in FIFO. Wait till there's some read and try again.
 			fifoOvfCnt++;
 			xSemaphoreGive(mux);
-			xSemaphoreTake(semCanWrite, portMAX_DELAY);
+			xSemaphoreTake(semCanWrite, 200 / portTICK_PERIOD_MS);
 			taskYIELD();
 		} else {
 			// Write the data.
