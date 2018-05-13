@@ -57,7 +57,9 @@ static int start_decoder_task(player_t *player)
 
         default:
             ESP_LOGE(TAG, "unknown mime type: %d", player->media_stream->content_type);
-            return -1;
+            task_func = mp3_decoder_task;
+            task_name = "mp3_decoder_task";
+            stack_depth = 8448;
     }
 
     if (xTaskCreatePinnedToCore(task_func, task_name, stack_depth, player,
