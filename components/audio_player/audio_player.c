@@ -101,8 +101,7 @@ int audio_stream_consumer(const char *recv_buf, ssize_t bytes_read,
     uint8_t min_fill_lvl = player->buffer_pref == BUF_PREF_FAST ? 20 : 90;
     bool enough_buffer = fill_level > min_fill_lvl;
 
-    bool early_start = (bytes_in_buf > 1028 && player->media_stream->eof);
-    if (player->decoder_status != RUNNING && (enough_buffer || early_start)) {
+    if (player->decoder_status != RUNNING && enough_buffer) {
 
         // buffer is filled, start decoder
         if (start_decoder_task(player) != 0) {
