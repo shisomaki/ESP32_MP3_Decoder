@@ -1,5 +1,8 @@
 menu "Web Radio / Bluetooth Speaker"
 
+menuconfig TEST_TONE_MODE
+    bool "Test Tone Mode"
+    
 menu "Wifi Configuration"
 
 config WIFI_SSID

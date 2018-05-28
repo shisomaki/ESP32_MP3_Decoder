@@ -26,6 +26,7 @@
 #include "bt_speaker.h"
 #endif
 #include "playlist.h"
+#include "test_tone.h"
 
 
 #define WIFI_LIST_NUM   10
@@ -130,6 +131,11 @@ void app_main()
     ESP_LOGI(TAG, "RAM left: %u", esp_get_free_heap_size());
 
     init_hardware();
+
+#ifdef CONFIG_TEST_TONE_MODE
+    renderer_init(create_renderer_config());    
+    start_test_tone();
+#endif
 
 #ifdef CONFIG_BT_SPEAKER_MODE
     bt_speaker_start(create_renderer_config());
