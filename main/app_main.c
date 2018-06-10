@@ -27,6 +27,7 @@
 #endif
 #include "playlist.h"
 #include "test_tone.h"
+#include "driver/gpio.h"
 
 
 #define WIFI_LIST_NUM   10
@@ -127,14 +128,25 @@ static void start_web_radio()
  */
 void app_main()
 {
+#ifdef CONFIG_TEST_TONE_MODE
+    gpio_config_t io_conf;
+    //GPIO2 Input Pull-up
+    io_conf.pin_bit_mask = (1ULL<<2);
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pull_up_en = 1;
+    gpio_config(&io_conf);
+#endif
+    
     ESP_LOGI(TAG, "starting app_main()");
     ESP_LOGI(TAG, "RAM left: %u", esp_get_free_heap_size());
 
     init_hardware();
 
 #ifdef CONFIG_TEST_TONE_MODE
-    renderer_init(create_renderer_config());    
-    start_test_tone();
+    if(gpio_get_level(2) == 0) {
+        renderer_init(create_renderer_config());    
+        start_test_tone();
+    }
 #endif
 
 #ifdef CONFIG_BT_SPEAKER_MODE
