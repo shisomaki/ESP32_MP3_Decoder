@@ -15,7 +15,7 @@
 
 void start_test_tone(void)
 {
-    int *samples_data = malloc((SAMPLE_RATE / WAVE_FREQ_HZ) * 4);
+    int *samples_data = malloc((SAMPLE_RATE / 100) * 4);
     unsigned int i, sample_val, sample_per_cycle, freq = WAVE_FREQ_HZ, mode;
     double wave_float;
     pcm_format_t buf_desc;
@@ -33,10 +33,12 @@ void start_test_tone(void)
     {
         if(gpio_get_level(0) == 0) {
             mode++;
-            if(mode > 3)
+            if(mode > 4)
                 mode = 0;
             if(mode == 1 || mode == 3) {
                 freq = 10000;
+            } else if(mode == 4) {
+                freq = 100;
             } else {
                 freq = 1000;
             }
@@ -50,6 +52,12 @@ void start_test_tone(void)
         for(i = 0; i < sample_per_cycle; i++) {
             if(mode <= 1) {
                 wave_float = 32767 * sin(PI * i / (sample_per_cycle / 2));
+            } else if(mode == 4) {
+                if(i == 0) {
+                    wave_float = 32767;
+                } else {
+                    wave_float = 0;
+                }
             } else {
                 if(i < (sample_per_cycle / 2)) {
                     wave_float = 32767;
