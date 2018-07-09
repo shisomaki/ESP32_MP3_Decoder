@@ -15,8 +15,6 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
-#include "fdk_aac_decoder.h"
-#include "libfaad_decoder.h"
 #include "mp3_decoder.h"
 #include "controls.h"
 
@@ -34,33 +32,9 @@ static int start_decoder_task(player_t *player)
 
     ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
 
-    switch (player->media_stream->content_type)
-    {
-        case AUDIO_MPEG:
-            task_func = mp3_decoder_task;
-            task_name = "mp3_decoder_task";
-            stack_depth = 8448;
-            break;
-
-        case AUDIO_MP4:
-            task_func = libfaac_decoder_task;
-            task_name = "libfaac_decoder_task";
-            stack_depth = 55000;
-            break;
-
-        case AUDIO_AAC:
-        case OCTET_STREAM: // probably .aac
-            task_func = fdkaac_decoder_task;
-            task_name = "fdkaac_decoder_task";
-            stack_depth = 6144;
-            break;
-
-        default:
-            ESP_LOGE(TAG, "unknown mime type: %d", player->media_stream->content_type);
-            task_func = mp3_decoder_task;
-            task_name = "mp3_decoder_task";
-            stack_depth = 8448;
-    }
+    task_func = mp3_decoder_task;
+    task_name = "mp3_decoder_task";
+    stack_depth = 8448;
 
     if (xTaskCreatePinnedToCore(task_func, task_name, stack_depth, player,
     PRIO_MAD, NULL, 1) != pdPASS) {
