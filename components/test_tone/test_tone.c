@@ -47,6 +47,7 @@ void start_test_tone(void)
             sample_per_cycle = SAMPLE_RATE / freq;
             ESP_LOGI(TAG, "SAMPLE_PER_CYCLE: %d", sample_per_cycle);
 
+            vTaskDelay(200 / portTICK_PERIOD_MS);
             while(!gpio_get_level(0)) ;
         }
         
