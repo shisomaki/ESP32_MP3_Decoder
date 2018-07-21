@@ -33,8 +33,9 @@ void start_test_tone(void)
     {
         if(gpio_get_level(0) == 0) {
             mode++;
-            if(mode > 4)
+            if(mode > 5)
                 mode = 0;
+
             if(mode == 1 || mode == 3) {
                 freq = 10000;
             } else if(mode == 4) {
@@ -45,12 +46,12 @@ void start_test_tone(void)
             
             sample_per_cycle = SAMPLE_RATE / freq;
             ESP_LOGI(TAG, "SAMPLE_PER_CYCLE: %d", sample_per_cycle);
-            
+
             while(!gpio_get_level(0)) ;
         }
         
         for(i = 0; i < sample_per_cycle; i++) {
-            if(mode <= 1) {
+            if(mode < 2) {
                 wave_float = 32767 * sin(PI * i / (sample_per_cycle / 2));
             } else if(mode == 4) {
                 if(i == 0) {
@@ -58,6 +59,8 @@ void start_test_tone(void)
                 } else {
                     wave_float = 0;
                 }
+            } else if(mode == 5) {
+                wave_float = 0;
             } else {
                 if(i < (sample_per_cycle / 2)) {
                     wave_float = 32767;
