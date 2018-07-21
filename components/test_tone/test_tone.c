@@ -33,7 +33,7 @@ void start_test_tone(void)
     {
         if(gpio_get_level(0) == 0) {
             mode++;
-            if(mode > 5)
+            if(mode > 6)
                 mode = 0;
 
             if(mode == 1 || mode == 3) {
@@ -54,13 +54,13 @@ void start_test_tone(void)
         for(i = 0; i < sample_per_cycle; i++) {
             if(mode < 2) {
                 wave_float = 32767 * sin(PI * i / (sample_per_cycle / 2));
-            } else if(mode == 4) {
+            } else if(mode == 4 || mode == 5) {
                 if(i == 0) {
                     wave_float = 32767;
                 } else {
                     wave_float = 0;
                 }
-            } else if(mode == 5) {
+            } else if(mode == 6) {
                 wave_float = 0;
             } else {
                 if(i < (sample_per_cycle / 2)) {
