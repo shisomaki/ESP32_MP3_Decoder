@@ -2,6 +2,9 @@ menu "Web Radio / Bluetooth Speaker"
 
 menuconfig TEST_TONE_MODE
     bool "Test Tone Mode"
+
+menuconfig TITLE_PARSER
+    bool "Title parser !!TEST!!"
     
 menu "Wifi Configuration"
 
