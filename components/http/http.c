@@ -90,6 +90,132 @@ void title_icy_parser(char recv_buf, char *head_buf, int *pos, int *s)
             break;
     }
 }
+
+void metaint_parser(char recv_buf, int *s)
+{
+    switch (*s) {
+        case 0:
+            if (recv_buf == 'i')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 1:
+            if (recv_buf == 'c')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 2:
+            if (recv_buf == 'y')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 3:
+            if (recv_buf == '-')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 4:
+            if (recv_buf == 'm')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 5:
+            if (recv_buf == 'e')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 6:
+            if (recv_buf == 't')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 7:
+            if (recv_buf == 'a')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 8:
+            if (recv_buf == 'i')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 9:
+            if (recv_buf == 'n')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 10:
+            if (recv_buf == 't')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 11:
+            if (recv_buf == ':')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 12:
+            if (recv_buf == ' ')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 14:
+            if (recv_buf == '\r')
+                (*s)++;
+            break;
+
+        default:
+            break;
+    }
+}
+
+void body_parser(char recv_buf, int *s)
+{
+    switch (*s) {
+        case 0:
+            if (recv_buf == '\r')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 1:
+            if (recv_buf == '\n')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 2:
+            if (recv_buf == '\r')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 3:
+            if (recv_buf == '\n')
+                (*s)++;
+            else
+                *s = 0;
+            break;
+        case 4:
+            (*s)++;
+
+        default:
+            break;
+    }
+}
 #endif
 /**
  * @brief simple http_get
@@ -184,8 +310,8 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
     ssize_t recved;
 
 #ifdef CONFIG_TITLE_PARSER
-    char head_buf[64], *ret;
-    int metaint = 0, recv_len = 0, body = 0, skip = 0, i, m = 0, n=0, pos, s;
+    char head_buf[64];
+    int metaint = 0, recv_len = 0, body = 0, skip = 0, i, m = 0, n=0, pos, s, t = 0, u = 0;
 #endif
 
     /* intercept on_headers_complete() */
@@ -203,19 +329,26 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
         if (body) {
             recv_len += recved;
         } else {
-            if ((ret = strstr(recv_buf, "\r\n\r\n"))) {
-                recv_len = recved - (ret - recv_buf);
-                recv_len -= 4;
-                body = 1;
-            }
-            if ((ret = strstr(recv_buf, "icy-metaint"))) {
-                for(i = 0; i < 6 ; i++) {
-                    if (ret[i + 13] == '\r')
-                        break;
-                    metaint *= 10;
-                    metaint += ret [i + 13] - 0x30;
+            for (i = 0; i < recved ; i++) {
+
+                body_parser(recv_buf[i], &u);
+                if (u == 5) {
+                    recv_len = recved - i;
+                    body = 1;
+                    break;
                 }
-                ESP_LOGI(TAG,"icy-metaint: %d", metaint);
+
+                metaint_parser(recv_buf[i], &t);
+                if (t == 13) {
+                    t++;
+                    continue;
+                } else if (t == 14) {
+                    metaint *= 10;
+                    metaint += recv_buf[i] - 0x30;
+                } else if (t == 15) {
+                    t++;
+                    ESP_LOGI(TAG,"icy-metaint: %d", metaint);
+                }
             }
         }
 
