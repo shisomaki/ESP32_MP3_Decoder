@@ -27,68 +27,69 @@ void title_icy_parser(char recv_buf, char *head_buf, int *pos, int *s)
     switch (*s) {
         case 0:
             if (recv_buf == 'S')
-                (*s)++;
+                goto SPP;
             break;
         case 1:
             if (recv_buf == 't')
-                (*s)++;
+                goto SPP;
             break;
         case 2:
             if (recv_buf == 'r')
-                (*s)++;
+                goto SPP;
             break;
         case 3:
             if (recv_buf == 'e')
-                (*s)++;
+                goto SPP;
             break;
         case 4:
             if (recv_buf == 'a')
-                (*s)++;
+                goto SPP;
             break;
         case 5:
             if (recv_buf == 'm')
-                (*s)++;
+                goto SPP;
             break;
         case 6:
             if (recv_buf == 'T')
-                (*s)++;
+                goto SPP;
             break;
         case 7:
             if (recv_buf == 'i')
-                (*s)++;
+                goto SPP;
             break;
         case 8:
             if (recv_buf == 't')
-                (*s)++;
+                goto SPP;
             break;
         case 9:
             if (recv_buf == 'l')
-                (*s)++;
+                goto SPP;
             break;
         case 10:
             if (recv_buf == 'e')
-                (*s)++;
+                goto SPP;
             break;
         case 11:
             if (recv_buf == '=')
-                (*s)++;
+                goto SPP;
             break;
         case 12:
             if (recv_buf == '\'')
-                (*s)++;
+                goto SPP;
             break;
         case 13:
             if (recv_buf == '\'') {
-                (*s)++;
-                break;
+                goto SPP;
             }
 
             head_buf[(*pos)++] = recv_buf;
-
-        /* FALLTHROUGH */
-        default:
-            break;
+            return;
     }
+
+    *s = 0;
+    return;
+SPP:
+    (*s)++;
 }
 
 void metaint_parser(char recv_buf, int *s)
