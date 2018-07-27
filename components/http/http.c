@@ -24,168 +24,37 @@
 #ifdef CONFIG_TITLE_PARSER
 void title_icy_parser(char recv_buf, char *head_buf, int *pos, int *s)
 {
-    switch (*s) {
-        case 0:
-            if (recv_buf == 'S')
-                goto SPP;
-            break;
-        case 1:
-            if (recv_buf == 't')
-                goto SPP;
-            break;
-        case 2:
-            if (recv_buf == 'r')
-                goto SPP;
-            break;
-        case 3:
-            if (recv_buf == 'e')
-                goto SPP;
-            break;
-        case 4:
-            if (recv_buf == 'a')
-                goto SPP;
-            break;
-        case 5:
-            if (recv_buf == 'm')
-                goto SPP;
-            break;
-        case 6:
-            if (recv_buf == 'T')
-                goto SPP;
-            break;
-        case 7:
-            if (recv_buf == 'i')
-                goto SPP;
-            break;
-        case 8:
-            if (recv_buf == 't')
-                goto SPP;
-            break;
-        case 9:
-            if (recv_buf == 'l')
-                goto SPP;
-            break;
-        case 10:
-            if (recv_buf == 'e')
-                goto SPP;
-            break;
-        case 11:
-            if (recv_buf == '=')
-                goto SPP;
-            break;
-        case 12:
-            if (recv_buf == '\'')
-                goto SPP;
-            break;
-        case 13:
-            if (recv_buf == '\'') {
-                goto SPP;
-            }
+    const char str[] = "StreamTitle='";
 
-            head_buf[(*pos)++] = recv_buf;
-            return;
+    if (*s == 13 && recv_buf == '\'')
+    {
+        (*s)++;
+    } else if (*s == 13) {
+        head_buf[(*pos)++] = recv_buf;
     }
 
-    *s = 0;
-    return;
-SPP:
-    (*s)++;
+    if (*s >= strlen(str)) {
+        return;
+    }
+
+    if (recv_buf == str[*s]) {
+        (*s)++;
+    } else {
+        *s = 0;
+    }
 }
 
-void metaint_parser(char recv_buf, int *s)
+void str_parser(const char *str, char recv_buf, int *s)
 {
-    switch (*s) {
-        case 0:
-            if (recv_buf == 'i')
-                goto SPP;
-            break;
-        case 1:
-            if (recv_buf == 'c')
-                goto SPP;
-            break;
-        case 2:
-            if (recv_buf == 'y')
-                goto SPP;
-            break;
-        case 3:
-            if (recv_buf == '-')
-                goto SPP;
-            break;
-        case 4:
-            if (recv_buf == 'm')
-                goto SPP;
-            break;
-        case 5:
-            if (recv_buf == 'e')
-                goto SPP;
-            break;
-        case 6:
-            if (recv_buf == 't')
-                goto SPP;
-            break;
-        case 7:
-            if (recv_buf == 'a')
-                goto SPP;
-            break;
-        case 8:
-            if (recv_buf == 'i')
-                goto SPP;
-            break;
-        case 9:
-            if (recv_buf == 'n')
-                goto SPP;
-            break;
-        case 10:
-            if (recv_buf == 't')
-                goto SPP;
-            break;
-        case 11:
-            if (recv_buf == ':')
-                goto SPP;
-            break;
-        case 12:
-            if (recv_buf == ' ')
-                goto SPP;
-            break;
-        case 14:
-            if (recv_buf == '\r')
-                goto SPP;
-            return;
+    if (*s >= strlen(str)) {
+        return;
     }
 
-    *s = 0;
-    return;
-SPP:
-    (*s)++;
-}
-
-void body_parser(char recv_buf, int *s)
-{
-    switch (*s) {
-        case 0:
-            if (recv_buf == '\r')
-                goto SPP;
-            break;
-        case 1:
-            if (recv_buf == '\n')
-                goto SPP;
-            break;
-        case 2:
-            if (recv_buf == '\r')
-                goto SPP;
-            break;
-        case 3:
-            if (recv_buf == '\n')
-                goto SPP;
-            break;
-        case 4:
-            goto SPP;
+    if (recv_buf == str[*s]) {
+        (*s)++;
+    } else {
+        *s = 0;
     }
-
-    *s = 0;
-    return;
-SPP:
-    (*s)++;
 }
 #endif
 /**
@@ -302,23 +171,23 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
         } else {
             for (i = 0; i < recved ; i++) {
 
-                body_parser(recv_buf[i], &u);
-                if (u == 5) {
-                    recv_len = recved - i;
+                str_parser("\r\n\r\n", recv_buf[i], &u);
+                if (u == 4) {
+                    recv_len = recved - (i + 1);
                     body = 1;
                     break;
                 }
 
-                metaint_parser(recv_buf[i], &t);
+                str_parser("icy-metaint: ", recv_buf[i], &t);
                 if (t == 13) {
                     t++;
                     continue;
+                } else if (t == 14 && recv_buf[i] == '\r') {
+                    t++;
+                    ESP_LOGI(TAG,"icy-metaint: %d", metaint);
                 } else if (t == 14) {
                     metaint *= 10;
                     metaint += recv_buf[i] - 0x30;
-                } else if (t == 15) {
-                    t++;
-                    ESP_LOGI(TAG,"icy-metaint: %d", metaint);
                 }
             }
         }
