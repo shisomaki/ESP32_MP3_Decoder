@@ -25,15 +25,16 @@
 void title_icy_parser(char recv_buf, char *head_buf, int *pos, int *s)
 {
     const char str[] = "StreamTitle='";
+    const int len = strlen(str);
 
-    if (*s == 13 && recv_buf == '\'')
+    if (*s == len && recv_buf == '\'')
     {
         (*s)++;
-    } else if (*s == 13) {
+    } else if (*s == len) {
         head_buf[(*pos)++] = recv_buf;
     }
 
-    if (*s >= strlen(str)) {
+    if (*s >= len) {
         return;
     }
 
@@ -46,7 +47,11 @@ void title_icy_parser(char recv_buf, char *head_buf, int *pos, int *s)
 
 void str_parser(const char *str, char recv_buf, int *s)
 {
-    if (*s >= strlen(str)) {
+    if (*s == strlen(str)) {
+        (*s)++;
+    }
+
+    if (*s > strlen(str)) {
         return;
     }
 
@@ -174,21 +179,17 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
             for (i = 0; i < recved ; i++) {
 
                 str_parser("\r\n\r\n", recv_buf[i], &u);
-                if (u == 4) {
-                    recv_len = recved - (i + 1);
+                if (u == 5) {
+                    recv_len = recved - i;
                     body = 1;
 
                     callbacks->on_headers_complete(&parser);
-                    if (recv_len)
-                        nparsed = callbacks->on_body(&parser, recv_buf + (i + 1), recv_len);
+                    nparsed = callbacks->on_body(&parser, recv_buf + i, recv_len);
                     break;
                 }
 
                 str_parser("icy-metaint: ", recv_buf[i], &t);
-                if (t == 13) {
-                    t++;
-                    continue;
-                } else if (t == 14 && recv_buf[i] == '\r') {
+                if (t == 14 && recv_buf[i] == '\r') {
                     t++;
                     ESP_LOGI(TAG,"icy-metaint: %d", metaint);
                 } else if (t == 14) {
