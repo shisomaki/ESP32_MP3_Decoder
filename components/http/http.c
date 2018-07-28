@@ -158,7 +158,9 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
 
     /* parse response */
     http_parser parser;
+#ifndef CONFIG_TITLE_PARSER
     http_parser_init(&parser, HTTP_RESPONSE);
+#endif
     parser.data = user_data;
 
     esp_err_t nparsed = 0;
@@ -175,6 +177,10 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
                 if (u == 4) {
                     recv_len = recved - (i + 1);
                     body = 1;
+
+                    callbacks->on_headers_complete(&parser);
+                    if (recv_len)
+                        nparsed = callbacks->on_body(&parser, recv_buf + (i + 1), recv_len);
                     break;
                 }
 
@@ -190,6 +196,7 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
                     metaint += recv_buf[i] - 0x30;
                 }
             }
+            continue;
         }
 
         if (recv_len > metaint) {
@@ -203,7 +210,7 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
             if (skip != 1)
                 ESP_LOGI(TAG,"header skip: %d bytes", skip);
 
-            nparsed = http_parser_execute(&parser, callbacks, recv_buf, recved - m);
+            nparsed = callbacks->on_body(&parser, recv_buf, recved - m);
 
             //
 
@@ -243,17 +250,18 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
                 */
             }
 
-            nparsed = http_parser_execute(&parser, callbacks, recv_buf + n, recved - n);
+            nparsed = callbacks->on_body(&parser, recv_buf + n , recved - n);
             continue;
         }
-#endif
-
-        // using http parser causes stack overflow somtimes - disable for now
-        nparsed = http_parser_execute(&parser, callbacks, recv_buf, recved);
 
         // invoke on_body cb directly
-        // nparsed = callbacks->on_body(&parser, recv_buf, recved);
-    } while(recved > 0 && nparsed >= 0 && parser.http_errno == HPE_OK);
+        nparsed = callbacks->on_body(&parser, recv_buf, recved);
+    } while(recved > 0 && nparsed >= 0);
+#else
+        // using http parser causes stack overflow somtimes - disable for now
+        nparsed = http_parser_execute(&parser, callbacks, recv_buf, recved);
+    } while (recved > 0 && nparsed >= 0 && parser.http_errno == HPE_OK);
+#endif
 
     free(url);
 
