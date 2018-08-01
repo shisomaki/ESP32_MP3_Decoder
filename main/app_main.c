@@ -130,9 +130,10 @@ void app_main()
 {
 #ifdef CONFIG_TEST_TONE_MODE
     gpio_config_t io_conf;
-    //GPIO2 Input Pull-up
-    io_conf.pin_bit_mask = (1ULL<<2);
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = (1ULL<<2);
+    io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
 #endif
