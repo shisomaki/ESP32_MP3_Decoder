@@ -28,6 +28,7 @@
 #include "playlist.h"
 #include "test_tone.h"
 #include "driver/gpio.h"
+#include "hd44780.h"
 
 
 #define WIFI_LIST_NUM   10
@@ -142,6 +143,7 @@ void app_main()
     ESP_LOGI(TAG, "RAM left: %u", esp_get_free_heap_size());
 
     init_hardware();
+    LiquidCrystal_init();
 
 #ifdef CONFIG_TEST_TONE_MODE
     if(gpio_get_level(2) == 0) {

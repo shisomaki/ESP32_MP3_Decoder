@@ -22,6 +22,8 @@
 #include "url_parser.h"
 #include "controls.h"
 #include "playlist.h"
+#include "audio_player.h"
+#include "hd44780.h"
 
 #define TAG "web_radio"
 
@@ -96,7 +98,9 @@ static int on_message_complete_cb(http_parser *parser)
 
 static void http_get_task(void *pvParameters)
 {
+    int i;
     web_radio_t *radio_conf = pvParameters;
+    player_t *player = radio_conf->player_config;
     radio_conf->status = 1;
 
     /* configure callbacks */
@@ -109,6 +113,14 @@ static void http_get_task(void *pvParameters)
 
     // blocks until end of stream
     playlist_entry_t *curr_track = playlist_curr_track(radio_conf->playlist);
+    for (i = 0; i < 20 ; i++) {
+        if (curr_track->name[i] == '\0')
+            break;
+        player->station[i] = curr_track->name[i];
+    }
+    player->station[i] = '\0';
+    *player->title = '\0';
+    player->update = true;
     int result = http_client_get(curr_track->url, &callbacks,
             radio_conf->player_config);
 
@@ -190,14 +202,64 @@ void web_radio_gpio_handler_task(void *pvParams)
     }
 }
 
+void web_radio_lcd_handler_task(void *pvParams)
+{
+    char buf[3];
+    uint8_t old = 0;
+    web_radio_t *config = pvParams;
+    player_t *player = config->player_config;
+
+    for(;;)
+    {
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+        if(player->update)
+        {
+            LCD_Line_clear(0);
+            LCD_Line_clear(20);
+            LCD_Line_clear(40);
+            LCD_Line_clear(60);
+
+            LCD_Addr(0);
+            LCD_Print(player->title);
+            if (strlen(player->title) > 20) {
+                LCD_Addr(20);
+                LCD_Print(player->title + 20);
+            }
+            if (strlen(player->title) > 40) {
+                LCD_Addr(40);
+                LCD_Print(player->title + 40);
+            }
+            if (strlen(player->title) > 60) {
+                LCD_Addr(60);
+                LCD_Print(player->title + 60);
+            } else {
+                LCD_Addr(60);
+                LCD_Print(player->station);
+            }
+
+            player->update = false;
+        }
+
+        if (old != player->fill_level)
+        {
+            old = player->fill_level;
+            sprintf(buf, "%02u", player->fill_level);
+            LCD_Addr(78);
+            LCD_Print(buf);
+        }
+    }
+}
+
 void web_radio_init(web_radio_t *config)
 {
     controls_init(web_radio_gpio_handler_task, 2048, config);
+    lcd_task_init(web_radio_lcd_handler_task, 2048, config);
     audio_player_init(config->player_config);
 }
 
 void web_radio_destroy(web_radio_t *config)
 {
     controls_destroy(config);
+    lcd_task_destroy(config);
     audio_player_destroy(config->player_config);
 }

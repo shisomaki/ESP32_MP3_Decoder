@@ -3,6 +3,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+static TaskHandle_t *lcd_task;
+
 // commands
 #define LCD_CLEARDISPLAY 0x01
 #define LCD_RETURNHOME 0x02
@@ -170,10 +172,16 @@ void LiquidCrystal_init(void)
 
 void LCD_Addr (uint8_t value)
 {
-    if (value > 16)  // 文字数オーバー
+    if (value >= 80)
         return;
-    if (value > 8)
-        value = 0x40 + (value - 9);  // ２行目
+
+    if (value >= 60)
+        value = 0x54 + (value - 60);
+    else if (value >= 40)
+        value = 0x14 + (value - 40);
+    else if (value >= 20)
+        value = 0x40 + (value - 20);
+
     lcd_command(LCD_SETDDRAMADDR | value);  // DDRAM ADDR
 }
 
@@ -185,10 +193,29 @@ void LCD_Char (char value)
 void LCD_Print (char *value)
 {
     uint8_t i;
-    for(i = 0 ; i < 32 ; i++)
+    for(i = 0 ; i < 20 ; i++)
     {
         if (value[i] == '\0')
             return;
         lcd_write(value[i]);
     }
+}
+
+void LCD_Line_clear(uint8_t value)
+{
+    uint8_t i;
+    LCD_Addr (value);
+    for (i = 0 ; i < 20 ; i++)
+        lcd_write(' ');
+}
+
+void lcd_task_init(TaskFunction_t lcd_handler_task, const uint16_t usStackDepth, void *user_data)
+{
+    // start lcd task
+    xTaskCreatePinnedToCore(lcd_handler_task, "lcd_handler_task", usStackDepth, user_data, 10, lcd_task, 0);
+}
+
+void lcd_task_destroy()
+{
+    vTaskDelete(lcd_task);
 }

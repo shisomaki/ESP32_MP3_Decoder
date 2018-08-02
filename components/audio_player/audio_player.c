@@ -87,6 +87,7 @@ int audio_stream_consumer(const char *recv_buf, ssize_t bytes_read,
     t = (t + 1) & 255;
     if (t == 0) {
         ESP_LOGI(TAG, "Buffer fill %u%%, %d bytes RAM left %d", fill_level, bytes_in_buf, esp_get_free_heap_size());
+        player->fill_level = fill_level;
     }
 
     return 0;

@@ -17,6 +17,7 @@
 
 #include "url_parser.h"
 #include "http.h"
+#include "audio_player.h"
 
 
 #define TAG "http_client"
@@ -68,6 +69,7 @@ void str_parser(const char *str, char recv_buf, int *s)
  */
 int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
 {
+    player_t *player = user_data;
     url_t *url = url_parse(uri);
 
     const struct addrinfo hints = {
@@ -155,7 +157,6 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
     ssize_t recved;
 
 #ifdef CONFIG_TITLE_PARSER
-    char head_buf[64];
     int metaint = 0, recv_len = 0, body = 0, skip = 0, i, m = 0, n=0, pos, s, t = 0, u = 0;
 #endif
 
@@ -218,9 +219,9 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
             s = 0;
             pos = 0;
             for (i = recved - m; i < n ; i++) {
-                if (i >= recved || pos >= 64)
+                if (i >= recved || pos >= TITLE_BUF)
                     break;
-                title_icy_parser(recv_buf[i], head_buf, &pos, &s);
+                title_icy_parser(recv_buf[i], player->title, &pos, &s);
             }
 
             while (n >= recved) {
@@ -230,25 +231,18 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
                 m += recved;
 
                 for (i = 0; i < n ; i++) {
-                    if (i >= recved || pos >= 64)
+                    if (i >= recved || pos >= TITLE_BUF)
                         break;
-                    title_icy_parser(recv_buf[i], head_buf, &pos, &s);
+                    title_icy_parser(recv_buf[i], player->title, &pos, &s);
                 }
             }
 
             //
 
             if (pos) {
-                head_buf[pos] = '\0';
-                ESP_LOGI(TAG,"title: %s", head_buf);
-                /*
-                for (i = 0; i < pos ; i++)
-                    printf("%c", head_buf[i]);
-                printf("\n");
-                for (i = 0; i < pos ; i++)
-                    printf("%x/", head_buf[i]);
-                printf("\n");
-                */
+                player->title[pos] = '\0';
+                player->update = true;
+                ESP_LOGI(TAG,"title: %s", player->title);
             }
 
             nparsed = callbacks->on_body(&parser, recv_buf + n , recved - n);
