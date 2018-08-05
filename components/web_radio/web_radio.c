@@ -24,6 +24,8 @@
 #include "playlist.h"
 #include "audio_player.h"
 #include "hd44780.h"
+#include <tcpip_adapter.h>
+#include <esp_wifi.h>
 
 #define TAG "web_radio"
 
@@ -205,31 +207,63 @@ void web_radio_gpio_handler_task(void *pvParams)
 void web_radio_lcd_handler_task(void *pvParams)
 {
     char buf[3];
-    uint8_t old = 0;
+    uint8_t old = 0, len;
+    bool wl_conn;
     web_radio_t *config = pvParams;
     player_t *player = config->player_config;
+    tcpip_adapter_ip_info_t ipInfo;
+
+    wl_conn = false;
+    while (esp_wifi_connect() != ESP_OK) ;
 
     for(;;)
     {
         vTaskDelay(200 / portTICK_PERIOD_MS);
+
+        if (esp_wifi_connect() == ESP_OK)
+        {
+            if (!wl_conn)
+            {
+                LCD_Addr(0);
+                LCD_Print(">> Connected <<");
+                tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ipInfo);
+                LCD_Addr(20);
+                LCD_Print("Addr ");
+                LCD_Print(ip4addr_ntoa(&ipInfo.ip));
+                LCD_Addr(40);
+                LCD_Print("Mask ");
+                LCD_Print(ip4addr_ntoa(&ipInfo.netmask));
+                LCD_Addr(60);
+                LCD_Print("Gate ");
+                LCD_Print(ip4addr_ntoa(&ipInfo.gw));
+                vTaskDelay(5000 / portTICK_PERIOD_MS);
+            }
+            wl_conn = true;
+        } else {
+            if (wl_conn)
+            {
+                LiquidCrystal_Clear();
+                LCD_Print(">> Disconnected <<");
+            }
+            wl_conn = false;
+        }
+
         if(player->update)
         {
-            LCD_Line_clear(0);
-            LCD_Line_clear(20);
-            LCD_Line_clear(40);
-            LCD_Line_clear(60);
+            LiquidCrystal_Clear();
 
             LCD_Addr(0);
             LCD_Print(player->title);
-            if (strlen(player->title) > 20) {
+            len = strlen(player->title);
+            if (len > 20) {
                 LCD_Addr(20);
                 LCD_Print(player->title + 20);
             }
-            if (strlen(player->title) > 40) {
+            if (len > 40) {
                 LCD_Addr(40);
                 LCD_Print(player->title + 40);
             }
-            if (strlen(player->title) > 60) {
+            if (len > 60) {
                 LCD_Addr(60);
                 LCD_Print(player->title + 60);
             } else {
