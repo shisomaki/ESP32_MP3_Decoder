@@ -201,6 +201,18 @@ void LCD_Print (char *value)
     }
 }
 
+void LCD_Print_addr (char *value, uint8_t addr)
+{
+    uint8_t i;
+    LCD_Addr (addr);
+    for(i = 0 ; i < 20 ; i++)
+    {
+        if (value[i] == '\0')
+            return;
+        lcd_write(value[i]);
+    }
+}
+
 void LCD_Line_clear(uint8_t value)
 {
     uint8_t i;

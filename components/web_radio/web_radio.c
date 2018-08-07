@@ -164,7 +164,7 @@ void web_radio_gpio_handler_task(void *pvParams)
     for (;;) {
         if (xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS)) {
             ESP_LOGI(TAG, "GPIO[%d] intr, val: %d", io_num, gpio_get_level(io_num));
-            
+
             i = 0;
             for (;;){
                 if (gpio_get_level(0))
@@ -217,17 +217,13 @@ void web_radio_lcd_handler_task(void *pvParams)
         {
             if (!wl_conn)
             {
-                LCD_Addr(0);
-                LCD_Print(">> Connected <<");
+                LCD_Print_addr(">> Connected <<", 0);
                 tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ipInfo);
-                LCD_Addr(20);
-                LCD_Print("Addr ");
+                LCD_Print_addr("Addr ", 20);
                 LCD_Print(ip4addr_ntoa(&ipInfo.ip));
-                LCD_Addr(40);
-                LCD_Print("Mask ");
+                LCD_Print_addr("Mask ", 40);
                 LCD_Print(ip4addr_ntoa(&ipInfo.netmask));
-                LCD_Addr(60);
-                LCD_Print("Gate ");
+                LCD_Print_addr("Gate ", 60);
                 LCD_Print(ip4addr_ntoa(&ipInfo.gw));
                 vTaskDelay(5000 / portTICK_PERIOD_MS);
             }
@@ -236,7 +232,7 @@ void web_radio_lcd_handler_task(void *pvParams)
             if (wl_conn)
             {
                 LiquidCrystal_Clear();
-                LCD_Print(">> Disconnected <<");
+                LCD_Print_addr(">> Disconnected <<", 0);
             }
             wl_conn = false;
         }
@@ -245,23 +241,18 @@ void web_radio_lcd_handler_task(void *pvParams)
         {
             LiquidCrystal_Clear();
 
-            LCD_Addr(0);
-            LCD_Print(player->title);
+            LCD_Print_addr(player->title, 0);
             len = strlen(player->title);
             if (len > 20) {
-                LCD_Addr(20);
-                LCD_Print(player->title + 20);
+                LCD_Print_addr(player->title + 20, 20);
             }
             if (len > 40) {
-                LCD_Addr(40);
-                LCD_Print(player->title + 40);
+                LCD_Print_addr(player->title + 40, 40);
             }
             if (len > 60) {
-                LCD_Addr(60);
-                LCD_Print(player->title + 60);
+                LCD_Print_addr(player->title + 60, 60);
             } else {
-                LCD_Addr(60);
-                LCD_Print(player->station);
+                LCD_Print_addr(player->station, 60);
             }
 
             player->update = false;
@@ -271,8 +262,7 @@ void web_radio_lcd_handler_task(void *pvParams)
         {
             old = player->fill_level;
             sprintf(buf, "%02u", player->fill_level);
-            LCD_Addr(78);
-            LCD_Print(buf);
+            LCD_Print_addr(buf, 78);
         }
     }
 }

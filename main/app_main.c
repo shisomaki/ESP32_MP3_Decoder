@@ -144,7 +144,7 @@ void app_main()
 
     init_hardware();
     LiquidCrystal_init();
-    LCD_Print("Wait");
+    LCD_Print_addr("Wait", 0);
 
 #ifdef CONFIG_TEST_TONE_MODE
     if(gpio_get_level(2) == 0) {
