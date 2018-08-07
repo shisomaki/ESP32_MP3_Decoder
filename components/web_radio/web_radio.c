@@ -26,6 +26,7 @@
 #include "hd44780.h"
 #include <tcpip_adapter.h>
 #include <esp_wifi.h>
+#include <esp_system.h>
 
 #define TAG "web_radio"
 
@@ -103,7 +104,7 @@ static void http_get_task(void *pvParameters)
     int i;
     web_radio_t *radio_conf = pvParameters;
     player_t *player = radio_conf->player_config;
-    radio_conf->status = 1;
+    radio_conf->status = true;
 
     /* configure callbacks */
     http_parser_settings callbacks = { 0 };
@@ -133,7 +134,7 @@ static void http_get_task(void *pvParameters)
     }
     // ESP_LOGI(TAG, "http_client_get stack: %d\n", uxTaskGetStackHighWaterMark(NULL));
 
-    radio_conf->status = 0;
+    radio_conf->status = false;
     vTaskDelete(NULL);
 }
 
@@ -154,6 +155,7 @@ void web_radio_stop(web_radio_t *config)
 
 void web_radio_gpio_handler_task(void *pvParams)
 {
+    int i;
     gpio_handler_param_t *params = pvParams;
     web_radio_t *config = params->user_data;
     xQueueHandle gpio_evt_queue = params->gpio_evt_queue;
@@ -162,39 +164,30 @@ void web_radio_gpio_handler_task(void *pvParams)
     for (;;) {
         if (xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS)) {
             ESP_LOGI(TAG, "GPIO[%d] intr, val: %d", io_num, gpio_get_level(io_num));
-
-            /*
-            switch (get_player_status()) {
-                case RUNNING:
-                    ESP_LOGI(TAG, "stopping player");
-                    web_radio_stop(config);
+            
+            i = 0;
+            for (;;){
+                if (gpio_get_level(0))
                     break;
-
-                case STOPPED:
-                    ESP_LOGI(TAG, "starting player");
-                    web_radio_start(config);
-                    break;
-
-                default:
-                    ESP_LOGI(TAG, "player state: %d", get_player_status());
+                vTaskDelay(200 / portTICK_PERIOD_MS);
+                if (i++ > 10)
+                    esp_restart();
             }
-            */
+
             web_radio_stop(config);
             playlist_entry_t *track = playlist_next(config->playlist);
             ESP_LOGW(TAG, "next track: %s", track->name);
 
-
             while(config->player_config->decoder_status != STOPPED) {
                 vTaskDelay(20 / portTICK_PERIOD_MS);
             }
-
             while(config->status)
                 vTaskDelay(20 / portTICK_PERIOD_MS);
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
+
             xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS);
             web_radio_start(config);
-            
             while(!config->status)
                 vTaskDelay(20 / portTICK_PERIOD_MS);
         }

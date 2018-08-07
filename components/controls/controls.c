@@ -39,7 +39,7 @@ void controls_init(TaskFunction_t gpio_handler_task, const uint16_t usStackDepth
     gpio_config_t io_conf;
 
     //interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+    io_conf.intr_type = GPIO_PIN_INTR_NEGEDGE;
     //bit mask of the pins, use GPIO0 here ("Boot" button)
     io_conf.pin_bit_mask = (1 << GPIO_NUM_0);
     //set as input mode
