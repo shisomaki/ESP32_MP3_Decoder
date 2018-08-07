@@ -101,7 +101,7 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
     
     // receiving timeout
     struct timeval receiving_timeout;
-    receiving_timeout.tv_sec = 0;
+    receiving_timeout.tv_sec = 3;
     receiving_timeout.tv_usec = 500;
     if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &receiving_timeout,
             sizeof(receiving_timeout)) < 0) {

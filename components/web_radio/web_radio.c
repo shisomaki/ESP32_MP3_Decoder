@@ -104,7 +104,6 @@ static void http_get_task(void *pvParameters)
     int i;
     web_radio_t *radio_conf = pvParameters;
     player_t *player = radio_conf->player_config;
-    radio_conf->status = true;
 
     /* configure callbacks */
     http_parser_settings callbacks = { 0 };
@@ -114,27 +113,28 @@ static void http_get_task(void *pvParameters)
     callbacks.on_headers_complete = on_headers_complete_cb;
     callbacks.on_message_complete = on_message_complete_cb;
 
-    // blocks until end of stream
-    playlist_entry_t *curr_track = playlist_curr_track(radio_conf->playlist);
-    for (i = 0; i < 20 ; i++) {
-        if (curr_track->name[i] == '\0')
-            break;
-        player->station[i] = curr_track->name[i];
-    }
-    player->station[i] = '\0';
-    *player->title = '\0';
-    player->update = true;
-    int result = http_client_get(curr_track->url, &callbacks,
-            radio_conf->player_config);
+    for (;;) {
+        // blocks until end of stream
+        playlist_entry_t *curr_track = playlist_curr_track(radio_conf->playlist);
+        for (i = 0; i < 20 ; i++) {
+            if (curr_track->name[i] == '\0')
+                break;
+            player->station[i] = curr_track->name[i];
+        }
+        player->station[i] = '\0';
+        *player->title = '\0';
+        player->update = true;
+        int result = http_client_get(curr_track->url, &callbacks,
+                radio_conf->player_config);
 
-    if (result != 0) {
-        ESP_LOGE(TAG, "http_client_get error");
-    } else {
-        ESP_LOGI(TAG, "http_client_get completed");
+        if (result != 0) {
+            ESP_LOGE(TAG, "http_client_get error");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        } else {
+            ESP_LOGI(TAG, "http_client_get completed");
+        }
+        // ESP_LOGI(TAG, "http_client_get stack: %d\n", uxTaskGetStackHighWaterMark(NULL));
     }
-    // ESP_LOGI(TAG, "http_client_get stack: %d\n", uxTaskGetStackHighWaterMark(NULL));
-
-    radio_conf->status = false;
     vTaskDelete(NULL);
 }
 
@@ -174,26 +174,13 @@ void web_radio_gpio_handler_task(void *pvParams)
                     esp_restart();
             }
 
-            web_radio_stop(config);
             playlist_entry_t *track = playlist_next(config->playlist);
             ESP_LOGW(TAG, "next track: %s", track->name);
-
-            while(config->player_config->decoder_status != STOPPED) {
-                vTaskDelay(20 / portTICK_PERIOD_MS);
-            }
-            while(config->status)
-                vTaskDelay(20 / portTICK_PERIOD_MS);
+            web_radio_stop(config);
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
-
             xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS);
-            web_radio_start(config);
-            while(!config->status)
-                vTaskDelay(20 / portTICK_PERIOD_MS);
         }
-
-        if (!config->status)
-            web_radio_start(config);
     }
 }
 

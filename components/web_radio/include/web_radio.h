@@ -18,7 +18,6 @@ typedef struct {
 typedef struct {
     player_t *player_config;
     playlist_t *playlist;
-    bool status;
 } web_radio_t;
 
 void web_radio_init(web_radio_t *config);
