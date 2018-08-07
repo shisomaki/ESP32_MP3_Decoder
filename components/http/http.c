@@ -189,13 +189,15 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
                     break;
                 }
 
-                str_parser("icy-metaint: ", recv_buf[i], &t);
-                if (t == 14 && recv_buf[i] == '\r') {
+                str_parser("icy-metaint:", recv_buf[i], &t);
+                if (t == 13 && recv_buf[i] == '\r') {
                     t++;
                     ESP_LOGI(TAG,"icy-metaint: %d", metaint);
-                } else if (t == 14) {
-                    metaint *= 10;
-                    metaint += recv_buf[i] - 0x30;
+                } else if (t == 13) {
+                    if (recv_buf[i] >= '0' && recv_buf[i] <= '9') {
+                        metaint *= 10;
+                        metaint += recv_buf[i] - 0x30;
+                    }
                 }
             }
             continue;
