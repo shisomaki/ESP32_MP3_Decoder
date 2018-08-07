@@ -200,7 +200,7 @@ void web_radio_gpio_handler_task(void *pvParams)
 void web_radio_lcd_handler_task(void *pvParams)
 {
     char buf[3];
-    uint8_t old = 0, len;
+    uint8_t i, old = 0, len;
     bool wl_conn;
     web_radio_t *config = pvParams;
     player_t *player = config->player_config;
@@ -241,8 +241,17 @@ void web_radio_lcd_handler_task(void *pvParams)
         {
             LiquidCrystal_Clear();
 
-            LCD_Print_addr(player->title, 0);
             len = strlen(player->title);
+            for (i = 0 ; i < len ; i++) {
+                if(player->title[i] < ' ' || player->title[i] > '~')
+                    player->title[i] = '?';
+            }
+            for (i = 0 ; i < strlen(player->station) ; i++) {
+                if(player->station[i] < ' ' || player->station[i] > '~')
+                    player->station[i] = '?';
+            }
+
+            LCD_Print_addr(player->title, 0);
             if (len > 20) {
                 LCD_Print_addr(player->title + 20, 20);
             }
