@@ -14,7 +14,6 @@
 
 #include "playerconfig.h"
 #include "wifi.h"
-#include "esp_wifi.h"
 
 #define TAG "wifi"
 
@@ -86,7 +85,6 @@ void initialise_wifi(EventGroupHandle_t wifi_event_group)
 
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_FLASH) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK( esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G) );
 
     wifi_config_t wifi_config = {
         .sta = {
