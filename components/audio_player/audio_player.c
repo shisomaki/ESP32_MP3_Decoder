@@ -36,12 +36,12 @@ static int start_decoder_task(player_t *player)
     task_name = "mp3_decoder_task";
     stack_depth = 8448;
 
+    player->decoder_status = RUNNING;
     if (xTaskCreatePinnedToCore(task_func, task_name, stack_depth, player,
-    PRIO_MAD, NULL, 1) != pdPASS) {
+    PRIO_MAD, NULL, 0) != pdPASS) {
         ESP_LOGE(TAG, "ERROR creating decoder task! Out of memory?");
+        player->decoder_status = STOPPED;
         return -1;
-    } else {
-        player->decoder_status = RUNNING;
     }
 
     ESP_LOGI(TAG, "created decoder task: %s", task_name);
