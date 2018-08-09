@@ -143,7 +143,7 @@ void web_radio_start(web_radio_t *config)
 {
     // start reader task
     xTaskCreatePinnedToCore(&http_get_task, "http_get_task", 2560, config, 20,
-    NULL, 0);
+    NULL, 1);
 }
 
 void web_radio_stop(web_radio_t *config)
