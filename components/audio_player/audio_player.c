@@ -75,13 +75,9 @@ int audio_stream_consumer(const char *recv_buf, ssize_t bytes_read,
     uint8_t min_fill_lvl = player->buffer_pref == BUF_PREF_FAST ? 20 : 90;
     bool enough_buffer = fill_level > min_fill_lvl;
 
-    if (player->decoder_status != RUNNING && enough_buffer) {
-
+    if (player->decoder_command != CMD_START && enough_buffer) {
         // buffer is filled, start decoder
-        if (start_decoder_task(player) != 0) {
-            ESP_LOGE(TAG, "failed to start decoder task");
-            return -1;
-        }
+        player->decoder_command = CMD_START;
     }
 
     t = (t + 1) & 255;
@@ -97,6 +93,7 @@ void audio_player_init(player_t *player)
 {
     player_instance = player;
     player_status = INITIALIZED;
+    start_decoder_task(player);
 }
 
 void audio_player_destroy()

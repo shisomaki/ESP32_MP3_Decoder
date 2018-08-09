@@ -114,6 +114,15 @@ void mp3_decoder_task(void *pvParameters)
     struct mad_frame *frame;
     struct mad_synth *synth;
 
+restart:
+    for (;;) {
+        vTaskDelay(20 / portTICK_PERIOD_MS);
+        if (player->decoder_command == CMD_START) {
+            player->decoder_command = CMD_NONE;
+            break;
+        }
+    }
+
     //Allocate structs needed for mp3 decoding
     stream = malloc(sizeof(struct mad_stream));
     frame = malloc(sizeof(struct mad_frame));
@@ -139,7 +148,7 @@ void mp3_decoder_task(void *pvParameters)
 
         // calls mad_stream_buffer internally
         if (input(stream, buf, player) == MAD_FLOW_STOP ) {
-            break;
+            goto abort;
         }
 
         // decode frames until MAD complains
@@ -177,10 +186,11 @@ void mp3_decoder_task(void *pvParameters)
     spiRamFifoReset();
 
     player->decoder_status = STOPPED;
-    player->decoder_command = CMD_NONE;
     ESP_LOGI(TAG, "decoder stopped");
 
     ESP_LOGI(TAG, "MAD decoder stack: %d\n", uxTaskGetStackHighWaterMark(NULL));
+    goto restart;
+
     vTaskDelete(NULL);
 }
 

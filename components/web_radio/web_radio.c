@@ -104,6 +104,7 @@ static void http_get_task(void *pvParameters)
     int i;
     web_radio_t *radio_conf = pvParameters;
     player_t *player = radio_conf->player_config;
+    playlist_entry_t *curr_track;
 
     /* configure callbacks */
     http_parser_settings callbacks = { 0 };
@@ -115,7 +116,7 @@ static void http_get_task(void *pvParameters)
 
     for (;;) {
         // blocks until end of stream
-        playlist_entry_t *curr_track = playlist_curr_track(radio_conf->playlist);
+        curr_track = playlist_curr_track(radio_conf->playlist);
         for (i = 0; i < 20 ; i++) {
             if (curr_track->name[i] == '\0')
                 break;
