@@ -152,7 +152,7 @@ int http_client_get(char *uri, http_parser_settings *callbacks, void *user_data)
 
 
     /* Read HTTP response */
-    char recv_buf[1024];
+    char recv_buf[64];
     bzero(recv_buf, sizeof(recv_buf));
     ssize_t recved;
 
