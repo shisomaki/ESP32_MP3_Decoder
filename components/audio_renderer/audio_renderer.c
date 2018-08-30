@@ -188,8 +188,12 @@ void render_samples(char *buf, uint32_t buf_len, pcm_format_t *buf_desc)
                 case I2S_BITS_PER_SAMPLE_16BIT:
                     ; // workaround
 
+                    int samp_buf_l, samp_buf_r;
+                    samp_buf_l = (*(short *) ptr_l) * 10;
+                    samp_buf_r = (*(short *) ptr_r) * 10;
+
                     /* low - high / low - high */
-                    const char samp32[4] = {ptr_l[0], ptr_l[1], ptr_r[0], ptr_r[1]};
+                    const short samp32[2] = {samp_buf_l / 25, samp_buf_r / 25};
 
                     i2s_write(renderer_instance->i2s_num, (const char*) &samp32, 4, &bytes_pushed, max_wait);
                     break;

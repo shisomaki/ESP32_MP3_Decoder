@@ -165,6 +165,9 @@ void web_radio_gpio_handler_task(void *pvParams)
     for (;;) {
         if (xQueueReceive(gpio_evt_queue, &io_num, 20 / portTICK_PERIOD_MS)) {
             ESP_LOGI(TAG, "GPIO[%d] intr, val: %d", io_num, gpio_get_level(io_num));
+            
+            if (io_num != 0)
+                continue;
 
             i = 0;
             for (;;){
